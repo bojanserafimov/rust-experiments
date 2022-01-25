@@ -59,7 +59,8 @@ async fn example_2(t: &'static mut ThreadToken) {
     wait(t);
 
     // We can poll in another task
-    tokio::task::spawn(async {
+    // (tho this move is problematic)
+    tokio::task::spawn(async move {
         poll(&t)
     }).await;
 
