@@ -1,0 +1,11 @@
+[package]
+name = "sync-async-parser"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros", "time", "io-util"] }
+anyhow = "1.0.52"
+byteorder = "1.4.3"
