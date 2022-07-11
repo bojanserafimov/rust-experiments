@@ -17,6 +17,7 @@ fn neighbors(source: Box<dyn Iterator<Item=i32>>) -> Box<dyn Iterator<Item=(i32,
         let kids: Vec<_> = [10 * x, 10 * x + 1]
             .iter()
             .copied()
+            // NOTE comment out this line to test infinite recursion
             .filter(|&x| x < 1000)
             .collect();
         if kids.is_empty() {
@@ -72,17 +73,25 @@ impl Iterator for BundleMonad {
     type Item=Bundle<i32>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // See if queue has items
         if let Some(b) = self.queue.borrow_mut().pop_front() {
             return Some(b)
         }
+
+        // Queue is empty, so generate some elements. We can't return
+        // them though, since this also adds to the queue. Those elements
+        // need to be returned first. If not, we will infinite-loop on
+        // infinite-depth graphs.
         if let Some((root, kids)) = self.inner.next() {
-            return Some(Bundle {
+
+            self.queue.borrow_mut().push_back(Bundle {
                 root,
                 next_: Next::Nodes(kids),
             });
         }
-        // HACK try reading from the queue again, since pulling
-        //      from self.inner might have added elements.
+
+        // Try reading from the queue again, since pulling
+        // from self.inner might have added elements.
         if let Some(b) = self.queue.borrow_mut().pop_front() {
             return Some(b)
         }
@@ -137,6 +146,6 @@ fn main() {
     let start = start.peekable();
 
     let rec = Rec::new(start);
-    let output: Vec<_> = rec.collect();
+    let output: Vec<_> = rec.take(4).collect();
     dbg!(output);
 }
